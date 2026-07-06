@@ -24,7 +24,6 @@ const checkResultSchema = new mongoose.Schema(
       default:  () => new Date(),
     },
 
-    // Result fields
     status: {
       type:    String,
       enum:    ['UP', 'DOWN', 'DEGRADED'],
@@ -42,26 +41,25 @@ const checkResultSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Did the response body contain the expected keyword?
-    // Only relevant for 'keyword' type monitors
+   
     keywordFound: {
       type:    Boolean,
       default: null,
     },
 
-    // Is the SSL certificate valid and not expiring soon?
+    
     sslValid: {
       type:    Boolean,
       default: null,
     },
 
-    // Days until SSL certificate expires (null if not checked)
+    
     sslDaysRemaining: {
       type:    Number,
       default: null,
     },
 
-    // If the check failed: why did it fail?
+    
     errorMessage: {
       type:    String,
       default: null,
@@ -74,15 +72,12 @@ const checkResultSchema = new mongoose.Schema(
     },
   },
   {
-    // Do NOT use { timestamps: true } here.
-    // We defined checkedAt manually as our timeField.
-    // Adding mongoose timestamps would add a second createdAt which
-    // conflicts with time-series collection requirements.
+    
   }
 );
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
-// Primary query: "give me all checks for monitor X in the last 24 hours"
+
 checkResultSchema.index({ monitorId: 1, checkedAt: -1 });
 
 // For workspace-level analytics
@@ -104,7 +99,6 @@ export const ensureTimeSeriesCollection = async () => {
           granularity: 'seconds',
         },
         // Auto-delete documents older than 90 days
-        // You never need to write a cleanup cron job for this collection
         expireAfterSeconds: 90 * 24 * 60 * 60,
       });
       console.log('✅ CheckResult time-series collection created');

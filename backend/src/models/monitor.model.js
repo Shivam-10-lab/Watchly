@@ -22,12 +22,10 @@ const monitorSchema = new mongoose.Schema(
       trim:     true,
     },
 
-    // How often to check this monitor (in seconds)
     intervalSeconds: {
       type:    Number,
       default: 60,
       enum:    [30, 60, 120, 300, 600, 1800],
-      // 30s, 1min, 2min, 5min, 10min, 30min
     },
 
     type: {
@@ -39,26 +37,23 @@ const monitorSchema = new mongoose.Schema(
       // ssl     — checks SSL certificate validity and expiry
     },
 
-    // For HTTP and keyword monitors
     expectedStatusCode: {
       type:    Number,
       default: 200,
     },
 
-    // For keyword monitors: response body must contain this string
     keywordToFind: {
       type:    String,
       default: '',
     },
 
-    // How many milliseconds before a response is considered "slow"
-    // A slow response changes status to DEGRADED even if status code is 200
+   
     degradedThresholdMs: {
       type:    Number,
       default: 2000,
     },
 
-    // HTTP method to use when checking
+   
     method: {
       type:    String,
       enum:    ['GET', 'POST', 'HEAD'],
@@ -78,11 +73,6 @@ const monitorSchema = new mongoose.Schema(
       type:    String,
       enum:    ['UP', 'DOWN', 'DEGRADED', 'PAUSED', 'PENDING'],
       default: 'PENDING',
-      // PENDING  — just created, first check hasn't run yet
-      // UP       — last check succeeded within threshold
-      // DOWN     — consecutive failures exceeded threshold
-      // DEGRADED — responding but slower than degradedThresholdMs
-      // PAUSED   — monitoring intentionally paused by user
       index:   true,
     },
 
@@ -96,14 +86,12 @@ const monitorSchema = new mongoose.Schema(
       default: null,
     },
 
-    // The response time (ms) of the most recent check
     lastResponseTimeMs: {
       type:    Number,
       default: null,
     },
 
-    // Running count of consecutive failures
-    // Used by the state engine to avoid flip-flopping on a single failure
+    
     consecutiveFailures: {
       type:    Number,
       default: 0,
@@ -114,28 +102,27 @@ const monitorSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // How many consecutive failures before declaring DOWN
+    
     failureThreshold: {
       type:    Number,
       default: 2,
-      // 2 means: fail twice in a row → status becomes DOWN
-      // This prevents a single blip from triggering an incident
+     
     },
 
-    // How many consecutive successes before declaring recovery
+    
     recoveryThreshold: {
       type:    Number,
       default: 2,
     },
 
-    // BullMQ job ID — stored so we can remove the job when deleting a monitor
+    // BullMQ job ID 
     schedulerJobId: {
       type:    String,
       default: null,
     },
 
     // ── Runbook ────────────────────────────────────────────────────────────
-    // URL of the PDF/markdown file stored in Cloudinary
+    
     runbookUrl: {
       type:    String,
       default: null,
@@ -145,7 +132,6 @@ const monitorSchema = new mongoose.Schema(
     notifications: {
       email: {
         enabled:    { type: Boolean, default: true },
-        // Additional email recipients beyond workspace members
         recipients: [{ type: String }],
       },
       webhook: {

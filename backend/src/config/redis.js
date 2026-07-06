@@ -2,7 +2,7 @@ import { createClient } from 'redis';
 import Redis            from 'ioredis';
 
 // ── node-redis client ─────────────────────────────────────────────────────────
-// Used for: caching (GET/SET), pub/sub (PUBLISH/SUBSCRIBE)
+
 let cacheClient  = null;
 let pubClient    = null;
 let subClient    = null;
@@ -23,10 +23,7 @@ export const connectRedis = async () => {
     },
   });
 
-  // Three separate clients because:
-  // - A client in subscribe mode cannot run normal commands
-  // - pub and sub must be separate for Redis pub/sub
-  // - cache is for regular GET/SET operations
+  // Three separate clients :
   cacheClient = makeClient();
   pubClient   = makeClient();
   subClient   = makeClient();
@@ -60,7 +57,7 @@ export const getSubClient = () => {
 };
 
 // ── ioredis client ────────────────────────────────────────────────────────────
-// Used exclusively by BullMQ — it requires ioredis, not the redis package
+// Used exclusively by BullMQ 
 let ioRedisClient = null;
 
 export const getIORedis = () => {

@@ -4,7 +4,6 @@ let connection = null;
 let channel    = null;
 
 // ── Queue and exchange names ──────────────────────────────────────────────────
-// Keep all names in one place — never use string literals in other files
 export const QUEUES = {
   NOTIFICATION_EMAIL:   'notification.email',
   NOTIFICATION_WEBHOOK: 'notification.webhook',
@@ -32,8 +31,6 @@ export const connectRabbitMQ = async (retries = 5) => {
       await channel.assertQueue(QUEUES.NOTIFICATION_WEBHOOK, { durable: true });
 
       // Bind each queue to the exchange with a routing key matching the queue name
-      // This means: messages published with routingKey='notification.email'
-      // go to the email queue, and 'notification.webhook' go to the webhook queue
       await channel.bindQueue(
         QUEUES.NOTIFICATION_EMAIL,
         EXCHANGES.NOTIFICATIONS,

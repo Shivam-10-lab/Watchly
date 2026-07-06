@@ -15,8 +15,6 @@ const uptimeStatSchema = new mongoose.Schema(
       required: true,
     },
 
-    // The start of the hour this stat covers
-    // e.g. 2024-01-15T14:00:00Z covers 14:00–14:59 UTC
     hour: {
       type:     Date,
       required: true,
@@ -43,7 +41,7 @@ const uptimeStatSchema = new mongoose.Schema(
 );
 
 // ── Compound unique index ─────────────────────────────────────────────────────
-// Each monitor has at most one stat document per hour
+// Each monitor has at most one stat document for that particular hour.
 uptimeStatSchema.index({ monitorId: 1, hour: 1 }, { unique: true });
 
 // For "last 24 hours of stats" queries

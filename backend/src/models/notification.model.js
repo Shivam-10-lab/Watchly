@@ -22,14 +22,14 @@ const notificationSchema = new mongoose.Schema(
       index:    true,
     },
 
-    // What triggered this notification
+    
     event: {
       type:    String,
       enum:    ['incident_opened', 'incident_resolved', 'ssl_expiring'],
       required: true,
     },
 
-    // Which channel this notification went through
+   
     channel: {
       type:    String,
       enum:    ['email', 'webhook'],
@@ -50,7 +50,7 @@ const notificationSchema = new mongoose.Schema(
       index:   true,
     },
 
-    // How many delivery attempts have been made
+    
     attempts: {
       type:    Number,
       default: 0,

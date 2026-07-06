@@ -19,13 +19,11 @@ import { ensureTimeSeriesCollection } from './models/index.js';
 
 const app        = express();
 const httpServer = createServer(app);
-// We create the HTTP server manually (not app.listen) because
+
 // Socket.io needs to attach to the raw HTTP server, not Express.
 
 // ── Trust proxy ────────────────────────────────────────────────────────────
-// Required when running behind Render/Railway's reverse proxy.
-// Without this, req.ip is always the proxy's IP,
-// which breaks per-user rate limiting.
+
 app.set('trust proxy', 1);
 
 // ── Security ───────────────────────────────────────────────────────────────
@@ -59,9 +57,7 @@ app.use(cookieParser());
 
 // ── Request ID middleware ──────────────────────────────────────────────────
 // Attaches a unique ID to every request.
-// This is how you trace one request through multiple log lines.
-// e.g. if user reports "I got a 500 at 3:42pm", you search logs
-// by requestId and see exactly what happened.
+
 app.use((req, res, next) => {
   req.requestId = uuidv4();
   res.setHeader('X-Request-Id', req.requestId);
@@ -69,9 +65,11 @@ app.use((req, res, next) => {
 });
 
 // ── HTTP request logging ───────────────────────────────────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
+import { requestLogger } from './middleware/requestLogger.middleware.js';
+
+// ── HTTP request logging ────────────────────────────────────────────────────
+// Use our custom logger instead of morgan 
+app.use(requestLogger);
 
 // ── Health check ───────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
@@ -150,14 +148,13 @@ const PORT = parseInt(process.env.PORT) || 5000;
 
 const startServer = async () => {
   try {
-    // Connect services in order — don't start server until all are ready
+    
     await connectDB();
     await connectRedis();
     await connectRabbitMQ();
     configureCloudinary();
 
     // Create the MongoDB time-series collection for check results
-    // This is safe to call every startup — it's a no-op if already exists
     await ensureTimeSeriesCollection();
 
     // Initialize Socket.io on the HTTP server

@@ -29,13 +29,13 @@ const incidentSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Computed when resolvedAt is set: resolvedAt - startedAt in seconds
+    // Computed when resolvedAt is set
     durationSeconds: {
       type:    Number,
       default: null,
     },
 
-    // ── State ───────────────────────────────────────────────────────────────
+    
     status: {
       type:    String,
       enum:    ['ongoing', 'resolved'],
@@ -43,8 +43,7 @@ const incidentSchema = new mongoose.Schema(
       index:   true,
     },
 
-    // Has someone acknowledged this incident?
-    // Acknowledging means "I know about this, I'm looking into it"
+    
     acknowledged: {
       type:    Boolean,
       default: false,
@@ -68,13 +67,13 @@ const incidentSchema = new mongoose.Schema(
       default: null,
     },
 
-    // The error message from the first failing check
+    
     triggerErrorMessage: {
       type:    String,
       default: null,
     },
 
-    // Optional human-written postmortem / notes
+   
     postmortem: {
       type:    String,
       default: '',
@@ -95,7 +94,7 @@ incidentSchema.index({ monitorId: 1, startedAt: -1 });
 // "All incidents for workspace X, newest first" (for incident list page)
 incidentSchema.index({ workspaceId: 1, startedAt: -1 });
 
-// ── Static method: open a new incident ────────────────────────────────────────
+// ── Static method ────────────────────────────────────────
 incidentSchema.statics.openIncident = async function ({
   monitorId, workspaceId, statusCode, errorMessage,
 }) {
@@ -109,7 +108,7 @@ incidentSchema.statics.openIncident = async function ({
   });
 };
 
-// ── Instance method: resolve an incident ─────────────────────────────────────
+// ── Instance method ─────────────────────────────────────
 incidentSchema.methods.resolve = async function () {
   const now             = new Date();
   this.resolvedAt       = now;

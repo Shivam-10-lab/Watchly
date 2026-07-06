@@ -20,12 +20,9 @@ const memberSchema = new mongoose.Schema(
       type:    String,
       enum:    ['owner', 'admin', 'viewer'],
       default: 'viewer',
-      // owner  — can delete workspace, manage billing, all admin actions
-      // admin  — can create/delete monitors, invite/remove members
-      // viewer — read-only access to dashboard and incidents
+      
     },
 
-    // When the user accepted the invitation
     joinedAt: {
       type:    Date,
       default: Date.now,

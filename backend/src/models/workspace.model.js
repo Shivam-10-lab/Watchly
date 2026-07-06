@@ -11,7 +11,7 @@ const workspaceSchema = new mongoose.Schema(
     },
 
     // URL-friendly identifier for the public status page
-    // e.g. "acme-corp" → /status/acme-corp
+  
     slug: {
       type:      String,
       required:  true,
@@ -39,7 +39,7 @@ const workspaceSchema = new mongoose.Schema(
       unique:  true,
       default: () => `wl_${uuidv4().replace(/-/g, '')}`,
       select:  false,
-      // select: false — never accidentally leaked in responses
+  
     },
 
     // Public status page visibility
@@ -77,7 +77,7 @@ workspaceSchema.index({ slug: 1 });
 workspaceSchema.index({ ownerId: 1 });
 
 // ── Static: generate a unique slug from workspace name ────────────────────────
-// e.g. "Acme Corp" → "acme-corp" → "acme-corp-2" if taken
+
 workspaceSchema.statics.generateSlug = async function (name) {
   const base = name
     .toLowerCase()
