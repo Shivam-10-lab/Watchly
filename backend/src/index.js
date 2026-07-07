@@ -86,11 +86,14 @@ app.get('/health', (req, res) => {
 app.get('/ping', (req, res) => res.status(200).send('pong'));
 
 // ── API routes ─────────────────────────────────────────────────────────────
-// We will import and mount routes in Chunk 3 when we build them.
-// Commented out for now — uncomment as each chunk is built.
-//
-// import routes from './routes/index.js';
-// app.use('/api/v1', routes);
+import { generalLimiter } from './middleware/rateLimiter.middleware.js';
+import routes             from './routes/index.js';
+
+// Apply general rate limit to all API routes
+app.use('/api', generalLimiter);
+
+// Mount all routes under /api/v1 (API versioning)
+app.use('/api/v1', routes);
 
 // ── 404 handler ────────────────────────────────────────────────────────────
 app.use((req, res) => {

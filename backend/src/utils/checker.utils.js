@@ -3,9 +3,7 @@ import https from 'https';
 import tls   from 'tls';
 
 // ── Main check function ────────────────────────────────────────────────────
-// Takes a monitor config, makes the HTTP request, returns a structured result.
-// This function never throws — it always returns a result object
-// (failures are captured in the result, not thrown as exceptions)
+
 export const performCheck = async (monitor) => {
   const startTime = Date.now();
 

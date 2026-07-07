@@ -3,12 +3,7 @@ import { Member }    from '../models/index.js';
 
 // ── loadWorkspace ──────────────────────────────────────────────────────────
 // Applied on all routes under /api/v1/workspaces/:workspaceId/*
-//
-// After this runs, controllers can safely use:
-//   req.workspace → the full Workspace document
-//   req.member    → the Member document (role: 'owner' | 'admin' | 'viewer')
-//
-// If the user is not a member → 403 (not 404, so we don't leak workspace existence)
+
 export const loadWorkspace = async (req, res, next) => {
   try {
     const { workspaceId } = req.params;

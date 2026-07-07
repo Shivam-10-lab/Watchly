@@ -7,13 +7,7 @@ import { Member }    from '../models/index.js';
 //
 // API keys bypass JWT — they're used by CI/CD pipelines, scripts, etc.
 // where getting a JWT would require a login flow.
-//
-// Usage:
-//   router.post('/monitors',
-//     authenticateWithApiKeyOrJwt,  ← try API key first, then JWT
-//     loadWorkspace,
-//     monitorController.create
-//   )
+
 export const authenticateApiKey = async (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'];
@@ -32,8 +26,6 @@ export const authenticateApiKey = async (req, res, next) => {
       });
     }
 
-    // API keys are stored with select: false in the schema
-    // We must explicitly request the field
     const workspace = await Workspace.findOne({ apiKey }).select('+apiKey');
 
     if (!workspace) {
@@ -43,12 +35,8 @@ export const authenticateApiKey = async (req, res, next) => {
       });
     }
 
-    // For API key auth, we need to set req.user and req.member
-    // so downstream middleware (loadWorkspace) and controllers work correctly.
-    // We use the workspace owner as the acting user for API key requests.
     req.user = { userId: workspace.ownerId.toString() };
 
-    // Simulate an admin membership so API keys have full write access
     req.member = {
       workspaceId: workspace._id,
       userId:      workspace.ownerId,
@@ -65,24 +53,16 @@ export const authenticateApiKey = async (req, res, next) => {
 };
 
 // ── flexAuth ───────────────────────────────────────────────────────────────
-// Tries API key first, falls back to JWT.
-// Apply this on any route that should accept BOTH methods.
-//
-// How it works:
-// If X-API-Key header is present → use API key auth
-// If Authorization: Bearer header is present → use JWT auth
-// If neither → 401
+
 export const flexAuth = async (req, res, next) => {
   const apiKey    = req.headers['x-api-key'];
   const authHeader= req.headers.authorization;
 
   if (apiKey) {
-    // Delegate to API key middleware
     return authenticateApiKey(req, res, next);
   }
 
   if (authHeader?.startsWith('Bearer ')) {
-    // Delegate to JWT middleware
     const { authenticate } = await import('./auth.middleware.js');
     return authenticate(req, res, next);
   }

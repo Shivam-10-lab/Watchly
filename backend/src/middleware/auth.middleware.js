@@ -1,17 +1,12 @@
 import { verifyAccessToken } from '../utils/jwt.utils.js';
 
 // ── authenticate ───────────────────────────────────────────────────────────
-// Protects any route it's applied to.
-// Reads the Bearer token from the Authorization header,
-// verifies it, and attaches req.user so controllers know who's calling.
-//
-// Usage in routes:
-//   router.get('/monitors', authenticate, monitorController.getAll)
+
 export const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) { 
       return res.status(401).json({
         success: false,
         message: 'Access token missing. Please log in.',
@@ -22,8 +17,7 @@ export const authenticate = (req, res, next) => {
     const token   = authHeader.split(' ')[1];
     const decoded = verifyAccessToken(token);
 
-    // Attach decoded payload to req
-    // decoded contains: { userId, email, iat, exp }
+    
     req.user = decoded;
     next();
 
@@ -48,15 +42,7 @@ export const authenticate = (req, res, next) => {
 
 // ── requireRole ────────────────────────────────────────────────────────────
 // Used AFTER both authenticate AND workspace middleware have run.
-// By that point, req.member is available (set by workspace middleware).
-//
-// Usage:
-//   router.delete('/monitors/:id',
-//     authenticate,
-//     loadWorkspace,
-//     requireRole('admin', 'owner'),
-//     monitorController.delete
-//   )
+
 export const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!req.member) {

@@ -7,8 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // - Duration in milliseconds
 // - The user making the request (if authenticated)
 //
-// In production you'd send these to a log aggregator (Datadog, Papertrail)
-// and filter by requestId to see the full lifecycle of any request
+
 export const requestLogger = (req, res, next) => {
   // Attach requestId if not already set by index.js
   if (!req.requestId) {
@@ -19,7 +18,7 @@ export const requestLogger = (req, res, next) => {
   const startTime = Date.now();
 
   // Log when the RESPONSE finishes (not when the request starts)
-  // This way we know both the status code and the duration
+
   res.on('finish', () => {
     const duration = Date.now() - startTime;
     const status   = res.statusCode;

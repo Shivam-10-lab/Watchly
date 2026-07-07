@@ -9,7 +9,7 @@ export const getCache = async (key) => {
     return value ? JSON.parse(value) : null;
   } catch (err) {
     // Cache errors should never crash the app
-    // On error, return null and fall through to the DB
+    
     console.error(`Cache GET error [${key}]:`, err.message);
     return null;
   }
@@ -35,9 +35,7 @@ export const deleteCache = async (key) => {
 };
 
 // Deletes all keys matching a glob pattern
-// Used after writes that invalidate multiple cache entries
-// e.g. deleteCacheByPattern('monitors:ws-abc123:*')
-// deletes all monitor caches for workspace abc123
+
 export const deleteCacheByPattern = async (pattern) => {
   try {
     const client = getCacheClient();
@@ -57,18 +55,7 @@ export const deleteCacheByPattern = async (pattern) => {
 };
 
 // ── getOrSet ───────────────────────────────────────────────────────────────
-// The most useful cache utility. Usage:
-//
-// const monitors = await getOrSet(
-//   'monitors:ws-abc123',
-//   () => Monitor.find({ workspaceId: 'abc123' }),
-//   120 // cache for 2 minutes
-// );
-//
-// Internally:
-// 1. Check Redis for the key
-// 2. If found (cache hit): return it immediately — no DB query
-// 3. If not found (cache miss): run the fetchFn, store result in Redis, return it
+
 export const getOrSet = async (key, fetchFn, ttlSeconds = 300) => {
   const cached = await getCache(key);
   if (cached !== null) {
@@ -81,7 +68,6 @@ export const getOrSet = async (key, fetchFn, ttlSeconds = 300) => {
 };
 
 // ── Key builders ───────────────────────────────────────────────────────────
-// Centralized key construction prevents typos and makes invalidation easy
 // All keys follow: resource:identifier:sub-resource
 export const buildCacheKey = (...parts) => parts.join(':');
 
@@ -100,7 +86,7 @@ export const CACHE_KEYS = {
   workspaceOverview: (workspaceId)           => `overview:${workspaceId}`,
 };
 
-// How long each type of data should be cached
+
 export const CACHE_TTL = {
   MONITORS:         60,    // 1 minute — balance between freshness and load
   MONITOR:          120,   // 2 minutes — individual monitor details

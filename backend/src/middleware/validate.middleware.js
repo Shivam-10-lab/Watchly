@@ -1,20 +1,7 @@
 import { validationResult } from 'express-validator';
 
 // ── validate ───────────────────────────────────────────────────────────────
-// Drop this middleware AFTER your express-validator chain in any route.
-// It checks if any validation rules failed and sends a structured error response.
-//
-// Usage in routes:
-//   router.post('/monitors',
-//     authenticate,
-//     loadWorkspace,
-//     [
-//       body('name').notEmpty().withMessage('Name is required'),
-//       body('url').isURL().withMessage('Valid URL required'),
-//     ],
-//     validate,         ← this file's export
-//     monitorController.create
-//   )
+
 export const validate = (req, res, next) => {
   const errors = validationResult(req);
 
@@ -34,7 +21,7 @@ export const validate = (req, res, next) => {
 };
 
 // ── Common validation chains ───────────────────────────────────────────────
-// Export reusable validator arrays so you don't repeat them in every controller
+
 import { body, param } from 'express-validator';
 
 // Validates a MongoDB ObjectId in route params
@@ -52,8 +39,7 @@ export const validateUrl = () =>
     .isURL({ require_protocol: true })
     .withMessage('Must be a valid URL including http:// or https://')
     .custom((val) => {
-      // Reject localhost and private IPs at validation stage
-      // (SSRF check in the webhook consumer catches runtime cases)
+      
       const blocked = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
       try {
         const { hostname } = new URL(val);

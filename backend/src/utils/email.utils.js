@@ -20,8 +20,7 @@ const getTransporter = () => {
 };
 
 // ── HTML email templates ────────────────────────────────────────────────────
-// Plain but clean. Interviewers often ask "how did you format emails?"
-// Having templates shows you thought about the UX of alerts.
+
 const baseTemplate = (content) => `
 <!DOCTYPE html>
 <html>
