@@ -35,14 +35,14 @@ export const login = async (req, res, next) => {
 
     // Access token → response body
     // Frontend stores it in memory (React state / a module-level variable)
-    // NOT in localStorage (vulnerable to XSS)
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
       data: {
         user:       user.toPublicJSON(),
         accessToken,
-        expiresIn:  15 * 60, // 15 minutes in seconds
+        expiresIn:  15 * 60, 
       },
     });
   } catch (err) { next(err); }

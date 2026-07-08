@@ -92,6 +92,7 @@ import routes             from './routes/index.js';
 // Apply general rate limit to all API routes
 app.use('/api', generalLimiter);
 
+
 // Mount all routes under /api/v1 (API versioning)
 app.use('/api/v1', routes);
 
@@ -149,6 +150,28 @@ app.use((err, req, res, next) => {
 // ── Start server ───────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT) || 5000;
 
+    // ── BullBoard (job queue visual dashboard) ──────────────────────────────────
+    import { createBullBoard }  from '@bull-board/api';
+    import { BullMQAdapter }    from '@bull-board/api/bullMQAdapter';
+    import { ExpressAdapter }   from '@bull-board/express';
+    import { getCheckQueue, getAnalyticsQueue } from './queues/queues.js';
+
+    const bullBoardAdapter = new ExpressAdapter();
+    bullBoardAdapter.setBasePath('/admin/queues');
+
+    createBullBoard({
+      queues: [
+        new BullMQAdapter(getCheckQueue()),
+        new BullMQAdapter(getAnalyticsQueue()),
+      ],
+      serverAdapter: bullBoardAdapter,
+    });
+
+    // Mount BullBoard at /admin/queues
+    // In production you'd add authentication middleware before this
+    app.use('/admin/queues', bullBoardAdapter.getRouter());
+    console.log(`📊 BullBoard: http://localhost:${PORT}/admin/queues`);
+
 const startServer = async () => {
   try {
     
@@ -156,6 +179,7 @@ const startServer = async () => {
     await connectRedis();
     await connectRabbitMQ();
     configureCloudinary();
+
 
     // Create the MongoDB time-series collection for check results
     await ensureTimeSeriesCollection();
@@ -167,9 +191,10 @@ const startServer = async () => {
     // Listen on httpServer (not app) — Socket.io is attached to httpServer
     httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 Watchly API running on http://localhost:${PORT}`);
-      console.log(`📋 Health check: http://localhost:${PORT}/health`);
-      console.log(`🔌 WebSocket:    ws://localhost:${PORT}`);
-      console.log(`📊 Environment:  ${process.env.NODE_ENV}\n`);
+      console.log(`📋 Health:    http://localhost:${PORT}/health`);
+      console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
+      console.log(`📊 BullBoard: http://localhost:${PORT}/admin/queues`);
+      console.log(`📦 Env:       ${process.env.NODE_ENV}\n`);
     });
 
   } catch (err) {

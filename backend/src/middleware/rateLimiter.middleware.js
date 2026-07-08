@@ -1,4 +1,4 @@
-import rateLimit       from 'express-rate-limit';
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { RedisStore }  from 'rate-limit-redis';
 import { getCacheClient } from '../config/redis.js';
 
@@ -46,7 +46,7 @@ export const authLimiter = makeRedisLimiter({
 export const monitorCreateLimiter = makeRedisLimiter({
   windowMs: 60 * 60 * 1000,
   max:      30,
-  keyGenerator: (req) => req.user?.userId || req.ip,
+  keyGenerator: (req) => req.user?.id || ipKeyGenerator(req),
   message: 'Monitor creation limit reached (30/hour). Please try again later.',
 });
 
@@ -63,6 +63,6 @@ export const webhookLimiter = makeRedisLimiter({
 export const apiKeyLimiter = makeRedisLimiter({
   windowMs:     60 * 60 * 1000,
   max:          1000,
-  keyGenerator: (req) => req.headers['x-api-key'] || req.ip,
+  keyGenerator: (req) => req.headers['x-api-key'] || ipKeyGenerator(req),
   message:      'API key rate limit exceeded (1000/hour).',
 });

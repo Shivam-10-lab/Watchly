@@ -8,14 +8,13 @@ import {
 
 // ── createWorkspace ────────────────────────────────────────────────────────
 // Creates the workspace AND the owner membership in one transaction.
-// Using a MongoDB session ensures both writes succeed or both fail —
-// you never end up with a workspace with no owner.
+
 export const createWorkspace = async ({ name, userId }) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Auto-generate the slug from the workspace name
+  
     const slug = await Workspace.generateSlug(name);
 
     // Create the workspace
@@ -57,7 +56,7 @@ export const getMyWorkspaces = async (userId) => {
 
   // For each workspace, get a quick stats summary
   const workspacesWithStats = await Promise.all(
-    memberships.map(async (membership) => {
+    memberships.map(async (membership) => { 
       const workspace    = membership.workspaceId;
       const monitorCount = await Monitor.countDocuments({
         workspaceId: workspace._id,
@@ -116,8 +115,7 @@ export const updateWorkspace = async (workspaceId, updates) => {
 
 // ── rotateApiKey ───────────────────────────────────────────────────────────
 // Generates a new API key for the workspace.
-// Old key is immediately invalid — any integrations using it will break
-// until updated. This is intentional (security: revoke compromised keys).
+
 export const rotateApiKey = async (workspaceId) => {
   const { v4: uuidv4 } = await import('uuid');
   const newApiKey = `wl_${uuidv4().replace(/-/g, '')}`;
@@ -126,7 +124,7 @@ export const rotateApiKey = async (workspaceId) => {
     workspaceId,
     { apiKey: newApiKey },
     { new: true }
-  ).select('+apiKey'); // Must select apiKey explicitly since it's select:false
+  ).select('+apiKey'); 
 
   if (!workspace) {
     const err = new Error('Workspace not found');
@@ -151,8 +149,7 @@ export const getWorkspaceApiKey = async (workspaceId) => {
 
 // ── inviteMember ───────────────────────────────────────────────────────────
 // Adds a user to the workspace by email.
-// In production you'd send an email invitation and have them accept it.
-// For this project we do direct adding (simpler, still shows the concept).
+
 export const inviteMember = async ({ workspaceId, email, role, inviterRole }) => {
   // Only owners can add admins
   if (role === 'owner') {

@@ -7,7 +7,7 @@ import {
 
 // ── registerUser ───────────────────────────────────────────────────────────
 export const registerUser = async ({ name, email, password }) => {
-  // Check if email is taken
+
   const existing = await User.findOne({ email });
   if (existing) {
     const err = new Error('An account with this email already exists');
@@ -15,15 +15,13 @@ export const registerUser = async ({ name, email, password }) => {
     throw err;
   }
 
-  // Create user — the pre-save hook in user.model.js hashes the password
   const user = await User.create({ name, email, password });
   return user;
 };
 
 // ── loginUser ──────────────────────────────────────────────────────────────
 export const loginUser = async ({ email, password }) => {
-  // select('+password') because password has select:false in the schema
-  // Without this, the password field is simply absent from the document
+ 
   const user = await User.findOne({ email }).select('+password');
 
   if (!user || !user.isActive) {
@@ -37,18 +35,14 @@ export const loginUser = async ({ email, password }) => {
     const err = new Error('Invalid email or password');
     err.status = 401;
     throw err;
-    // NOTE: same error whether email or password is wrong
-    // Telling attackers which field is wrong helps them
   }
 
   const accessToken  = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  // Store refresh token in the user's array
-  // Prune tokens older than 7 days to keep the array clean
+ 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  user.refreshTokens = [
-    ...user.refreshTokens.filter(t => t.createdAt > sevenDaysAgo),
+  user.refreshTokens = [...user.refreshTokens.filter(t => t.createdAt > sevenDaysAgo),
     { token: refreshToken, createdAt: new Date() },
   ];
 
@@ -59,11 +53,7 @@ export const loginUser = async ({ email, password }) => {
 
 // ── refreshTokens ──────────────────────────────────────────────────────────
 // Refresh token rotation:
-// Every use of a refresh token invalidates the old one and issues a new pair.
-// If someone uses a token that was already rotated, it means either:
-// 1. A replay attack (token was stolen and used before the legitimate user)
-// 2. A race condition in the client (two requests tried to refresh at once)
-// In both cases, we revoke ALL tokens for this user and force re-login.
+
 export const refreshTokens = async (incomingToken) => {
   if (!incomingToken) {
     const err = new Error('Refresh token missing');
@@ -112,7 +102,7 @@ export const refreshTokens = async (incomingToken) => {
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   user.refreshTokens = [
-    ...user.refreshTokens.filter(
+    ...user.refreshTokens.filter(   //Keep every token except the one that was just used.
       t => t.token !== incomingToken && t.createdAt > sevenDaysAgo
     ),
     { token: newRefreshToken, createdAt: new Date() },
@@ -124,8 +114,7 @@ export const refreshTokens = async (incomingToken) => {
 };
 
 // ── logoutUser ─────────────────────────────────────────────────────────────
-// Removes only THIS device's refresh token.
-// Other devices stay logged in.
+
 export const logoutUser = async (userId, refreshToken) => {
   const user = await User.findById(userId);
   if (!user) return;
@@ -137,8 +126,7 @@ export const logoutUser = async (userId, refreshToken) => {
 };
 
 // ── logoutAllDevices ───────────────────────────────────────────────────────
-// Wipes all refresh tokens — forces re-login on every device.
-// Used when user changes password or suspects compromise.
+
 export const logoutAllDevices = async (userId) => {
   await User.findByIdAndUpdate(userId, { refreshTokens: [] });
 };
@@ -156,7 +144,7 @@ export const getUserById = async (userId) => {
 
 // ── updateAlertPreferences ─────────────────────────────────────────────────
 export const updateAlertPreferences = async (userId, preferences) => {
-  const user = await User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(    // 3 arguments: id, update, options
     userId,
     { alertPreferences: preferences },
     { new: true, runValidators: true }
