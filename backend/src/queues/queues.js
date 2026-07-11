@@ -2,7 +2,7 @@ import { Queue }    from 'bullmq';
 import { getIORedis } from '../config/redis.js';
 
 // ── Queue names ────────────────────────────────────────────────────────────
-// Centralised here — never use string literals in other files
+
 export const QUEUE_NAMES = {
   HEALTH_CHECKS: 'health-checks',
   ANALYTICS:     'analytics',
@@ -10,7 +10,7 @@ export const QUEUE_NAMES = {
 
 // ── Queue instances ────────────────────────────────────────────────────────
 // Created lazily — only when first accessed.
-// This prevents "Redis not connected yet" errors during import.
+
 let checkQueue     = null;
 let analyticsQueue = null;
 
@@ -27,12 +27,9 @@ export const getCheckQueue = () => {
         type:  'exponential',
         delay: 2000,
         // Retry delays: 2s, 4s, 8s
-        // After 3 failures the job is moved to the "failed" state
-        // and you can see it in the BullBoard dashboard
       },
 
       // Remove completed jobs after 100 are stored
-      // (keeps Redis memory usage bounded)
       removeOnComplete: { count: 100 },
 
       // Keep failed jobs for debugging (last 50)

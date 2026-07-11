@@ -179,14 +179,17 @@ const startServer = async () => {
     await connectRedis();
     await connectRabbitMQ();
     configureCloudinary();
-
-
     // Create the MongoDB time-series collection for check results
     await ensureTimeSeriesCollection();
 
     // Initialize Socket.io on the HTTP server
     // Must happen AFTER redis is connected (Redis adapter needs it)
     initSocket(httpServer);
+
+    // Start the Redis pub/sub subscriber
+    // This bridges the check worker → Redis → WebSocket → browser
+    const { startSubscriber } = await import('./pubsub/subscriber.js');
+    await startSubscriber();
 
     // Listen on httpServer (not app) — Socket.io is attached to httpServer
     httpServer.listen(PORT, '0.0.0.0', () => {

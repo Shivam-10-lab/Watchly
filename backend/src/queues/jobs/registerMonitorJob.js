@@ -1,16 +1,11 @@
 import { getCheckQueue } from '../queues.js';
 
 // ── Job ID convention ──────────────────────────────────────────────────────
-// Deterministic and unique per monitor.
-// Using the monitorId as part of the job key means:
-// - No duplicate jobs even if registration is called twice
-// - Easy to find and remove the job when deleting a monitor
+
 const getJobKey = (monitorId) => `monitor-check-${monitorId}`;
 
 // ── Register (or re-register) a repeatable health check job ───────────────
-// Safe to call multiple times for the same monitor — BullMQ deduplicates
-// based on the repeat key. If the interval changes, we remove the old
-// job first and create a new one.
+
 export const registerMonitorJob = async (monitor) => {
   if (monitor.isPaused) {
     console.log(`Skipping job registration for paused monitor: ${monitor._id}`);
@@ -39,19 +34,10 @@ export const registerMonitorJob = async (monitor) => {
     {
       repeat: {
         every: intervalMs,
-        // 'every' means "run this job every N milliseconds starting now"
-        // Distinct from 'cron' which uses cron syntax
-        // 'every' is simpler and more predictable for fixed intervals
       },
-
       jobId: jobKey,
-      // jobId on a repeatable job sets the repeat key.
-      // BullMQ uses this to identify the repeat pattern in Redis.
-      // If you add two jobs with the same jobId, the second is ignored.
-      // This is what makes server restarts safe.
 
       // Run the first check immediately (don't wait for the interval)
-      // so users see a result right after creating the monitor
       delay: 0,
     }
   );
@@ -70,10 +56,8 @@ export const removeMonitorJob = async (monitorId) => {
   const jobKey = getJobKey(monitorId.toString());
 
   try {
-    // Get all repeatable jobs for this queue
     const repeatableJobs = await queue.getRepeatableJobs();
 
-    // Find the one matching our monitor
     const job = repeatableJobs.find(j => j.key.includes(jobKey));
 
     if (job) {

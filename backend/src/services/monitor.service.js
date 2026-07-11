@@ -53,10 +53,9 @@ export const createMonitor = async ({ workspaceId, data }) => {
   });
 
   // Register the BullMQ repeatable job
-  // This starts health checks immediately
   const jobKey = await registerMonitorJob(monitor);
 
-  // Store the job key on the monitor for later removal
+ 
   monitor.schedulerJobId = jobKey;
   await monitor.save();
 
@@ -99,7 +98,7 @@ export const getMonitorById = async (monitorId, workspaceId) => {
 export const updateMonitor = async (monitorId, workspaceId, updates) => {
   // Fields that trigger a job re-registration
   const jobAffectingFields = ['intervalSeconds', 'url', 'isPaused'];
-  const needsJobUpdate = jobAffectingFields.some(
+  const needsJobUpdate = jobAffectingFields.some(     // return true if any of these element satify the condition
     field => updates[field] !== undefined
   );
 
@@ -153,8 +152,6 @@ export const deleteMonitor = async (monitorId, workspaceId) => {
   await deleteCache(CACHE_KEYS.monitors(workspaceId));
 
   // Note: CheckResults and Incidents for this monitor are kept for history
-  // They'll auto-expire due to the time-series TTL on CheckResults
-  // Incidents are cheap to keep and provide historical value
 
   return { deleted: true, monitorId };
 };

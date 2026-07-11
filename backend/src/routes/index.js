@@ -1,9 +1,8 @@
 import { Router }   from 'express';
 import authRoutes       from './auth.routes.js';
 import workspaceRoutes  from './workspace.routes.js';
-// These will be uncommented as we build each chunk:
 import monitorRoutes    from './monitor.routes.js';
-// import incidentRoutes   from './incident.routes.js';
+ import incidentRoutes   from './incident.routes.js';
 // import statsRoutes      from './stats.routes.js';
 // import statusPageRoutes from './statusPage.routes.js';
 
@@ -13,7 +12,7 @@ const router = Router();
 router.use('/auth',       authRoutes);
 router.use('/workspaces', workspaceRoutes);
 router.use('/workspaces/:workspaceId/monitors', monitorRoutes);
-// router.use('/incidents',  incidentRoutes);
+router.use('/incidents',  incidentRoutes);
 // router.use('/stats',      statsRoutes);
 // router.use('/status',     statusPageRoutes);
 
