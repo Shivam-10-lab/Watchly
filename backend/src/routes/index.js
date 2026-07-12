@@ -2,9 +2,9 @@ import { Router }   from 'express';
 import authRoutes       from './auth.routes.js';
 import workspaceRoutes  from './workspace.routes.js';
 import monitorRoutes    from './monitor.routes.js';
- import incidentRoutes   from './incident.routes.js';
-// import statsRoutes      from './stats.routes.js';
-// import statusPageRoutes from './statusPage.routes.js';
+import incidentRoutes   from './incident.routes.js';
+import statsRoutes      from './stats.routes.js';
+import statusPageRoutes from './statusPage.routes.js';
 
 const router = Router();
 
@@ -13,8 +13,8 @@ router.use('/auth',       authRoutes);
 router.use('/workspaces', workspaceRoutes);
 router.use('/workspaces/:workspaceId/monitors', monitorRoutes);
 router.use('/incidents',  incidentRoutes);
-// router.use('/stats',      statsRoutes);
-// router.use('/status',     statusPageRoutes);
+router.use('/stats',      statsRoutes);
+router.use('/status',     statusPageRoutes);
 
 // ── API info endpoint ──────────────────────────────────────────────────────
 // Useful for checking which version of the API is running

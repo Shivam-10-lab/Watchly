@@ -1,44 +1,53 @@
 import 'dotenv/config';
-import { connectDB }       from '../config/db.js';
-import { connectRedis, getIORedis }   from '../config/redis.js';
-import { connectRabbitMQ } from '../config/rabbitmq.js';
-import { startCheckWorker } from '../queues/workers/check.worker.js';
+import { connectDB }            from '../config/db.js';
+import { connectRedis, getIORedis } from '../config/redis.js';
+import { connectRabbitMQ, getChannel } from '../config/rabbitmq.js';
+import { startCheckWorker }     from '../queues/workers/check.worker.js';
+import { startAnalyticsWorker } from '../queues/workers/analytics.worker.js';
+import { startEmailConsumer }   from '../notifications/consumers/email.consumer.js';
+import { startWebhookConsumer } from '../notifications/consumers/webhook.consumer.js';
+import { scheduleAnalyticsJobs }from '../queues/jobs/scheduleAnalytics.js';
 
 const startWorker = async () => {
   try {
     console.log('\n🔧 Starting Watchly Worker Process...\n');
 
-    // Workers need their own connections to every service
     await connectDB();
     await connectRedis();
     await connectRabbitMQ();
 
-    // Get the ioredis connection that BullMQ requires
     const ioRedisConn = getIORedis();
 
-    // Start the check worker
-    const checkWorker = startCheckWorker(ioRedisConn);
+    // ── Start BullMQ workers ──────────────────────────────────────────────
+    const checkWorker     = startCheckWorker(ioRedisConn);
+    const analyticsWorker = startAnalyticsWorker(ioRedisConn);
 
-    // We will add analyticsWorker in Chunk 6
-    // const analyticsWorker = startAnalyticsWorker(ioRedisConn);
+    // ── Schedule the analytics cron job ──────────────────────────────────
+    await scheduleAnalyticsJobs();
 
-    console.log('\n✅ Worker running. Waiting for jobs...');
-    console.log('Press Ctrl+C to stop.\n');
+    // ── Start RabbitMQ consumers ──────────────────────────────────────────
+    const channel = getChannel();
+    if (channel) {
+      await startEmailConsumer(channel);
+      await startWebhookConsumer(channel);
+    } else {
+      console.warn('⚠️  RabbitMQ unavailable — notifications disabled');
+    }
+
+    console.log('\n✅ All workers started successfully');
+    console.log('   • Check worker    — health checks every N seconds');
+    console.log('   • Analytics worker — uptime aggregation every hour');
+    console.log('   • Email consumer   — alert email dispatch');
+    console.log('   • Webhook consumer — webhook delivery with retry');
+    console.log('\nPress Ctrl+C to stop gracefully.\n');
 
     // ── Graceful shutdown ─────────────────────────────────────────────────
-    // When you press Ctrl+C or the process is killed, we:
-    // 1. Stop accepting new jobs (close the worker)
-    // 2. Wait for the currently running check to finish
-    // 3. Close all connections cleanly
-    // This prevents a health check being cut off mid-flight
-    // and leaving a CheckResult partially written.
     const shutdown = async (signal) => {
       console.log(`\n${signal} received — shutting down gracefully...`);
-
       try {
-        // Stop the worker (waits for in-progress jobs to complete)
         await checkWorker.close();
-        console.log('✅ Check worker stopped');
+        await analyticsWorker.close();
+        console.log('✅ BullMQ workers stopped');
 
         const { closeRabbitMQ } = await import('../config/rabbitmq.js');
         await closeRabbitMQ();
@@ -53,11 +62,8 @@ const startWorker = async () => {
 
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT',  () => shutdown('SIGINT'));
-
-    // Keep process alive — BullMQ event listeners are async
-    // Without this, the process exits immediately after setup
-    process.on('uncaughtException',  (err) => console.error('Uncaught exception:', err));
-    process.on('unhandledRejection', (err) => console.error('Unhandled rejection:', err));
+    process.on('uncaughtException',  err => console.error('Uncaught:', err));
+    process.on('unhandledRejection', err => console.error('Unhandled:', err));
 
   } catch (err) {
     console.error('❌ Worker failed to start:', err.message);
